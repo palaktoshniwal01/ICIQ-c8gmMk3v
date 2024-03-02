@@ -1,0 +1,88 @@
+//visual recognition 
+
+# Initialize video capture
+cap = cv2.VideoCapture(0)
+
+# Define AR markers (replace with your image/pattern for detection)
+marker_image = cv2.imread("marker.png")
+
+import imutils
+
+# Pre-process the marker image for detection
+marker_template = cv2.cvtColor(marker_image, cv2.COLOR_BGR2GRAY)
+marker_template = cv2.Canny(marker_template, 50, 200)
+
+while True:
+  # Capture frame from camera
+  ret, frame = cap.read()
+
+  # Convert frame to grayscale for processing
+  gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+  # Find contours (shapes) in the frame
+  cnts = cv2.findContours(gray.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+  cnts = imutils.grab_contours(cnts)
+
+  # Loop through contours to find the marker
+  for c in cnts:
+    peri = cv2.arcLength(c, True)
+    approx = cv2.approxPolyDP(c, 0.04 * peri, True)
+
+    # Check if the contour has 4 sides (marker shape)
+    if len(approx) == 4:
+      x, y, w, h = cv2.boundingRect(approx)
+      roi = frame[y:y+h, x:x+w]  # Extract region of interest (marker area)
+
+      # Match the extracted region with the marker template
+      res = cv2.matchTemplate(roi, marker_template, cv2.TM_CCOEFF_NORMED)
+      (_, max_val, _, max_loc) = cv2.minMaxLoc(res)
+
+      # If match is good enough, proceed with OCR and NLP
+      if max_val > 0.8:
+        # Draw a rectangle around the detected marker
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+        # Proceed to OCR and NLP (sections 3 and 4)
+
+  # Display the augmented reality frame
+  cv2.imshow("AR Visual Recognition", frame)
+
+  # Exit on 'q' key press
+  if cv2.waitKey(1) == ord("q"):
+    break
+
+cap.release()
+cv2.destroyAllWindows()
+
+
+import pytesseract
+
+# Assuming the text is within the `roi` variable from object detection
+
+# Configure Tesseract path (if not in system PATH)
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"  # Replace with your Tesseract path
+
+# Extract text from the ROI using Tesseract
+text = pytesseract.image_to_string(roi, config='--psm 6')
+print("Extracted Text:", text)
+
+
+from transformers import pipeline
+
+# Define a sentiment analysis model (optional)
+sentiment_analyzer = pipeline("sentiment-analysis")
+
+# Sentiment analysis (optional)
+sentiment = sentiment_analyzer(text)
+print("Sentiment Analysis:", sentiment)
+
+# Perform additional NLP tasks based on your needs
+#  - Summarization (summarize the extracted text)
+#  - Question answering (answer questions based on a knowledge base)
+#  - Translation (translate the text to another language)
+
+
+
+
+
+
