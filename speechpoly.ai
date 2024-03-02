@@ -1,0 +1,45 @@
+//speech recognition
+
+
+# Record audio using microphone
+recognizer = sr.Recognizer()
+with sr.Microphone() as source:
+  print("Speak Now!")
+  audio_data = recognizer.record(source)
+
+# Recognize speech using Google Speech Recognition (adjust based on your preference)
+text = recognizer.recognize_google(audio_data)
+print("Recognized Text:", text)
+
+
+
+
+from nltk.tokenize import word_tokenize
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
+# Tokenize the text (break into words)
+tokens = word_tokenize(text)
+
+# Sentiment analysis (optional)
+analyzer = SentimentIntensityAnalyzer()
+sentiment = analyzer.polarity_scores(text)
+print("Sentiment Analysis:", sentiment)
+
+# Named Entity Recognition (NER) (optional) - Identify entities in text (people, places, etc.)
+# You can use libraries like spaCy or NLTK for NER
+
+
+
+from transformers import pipeline
+
+# Define a generative pre-trained transformer model (GPT-3 for example)
+generator = pipeline("text-generation")
+
+# Generate response based on the intent of the user's speech (replace with your logic)
+if sentiment["pos"] > 0.5:
+  response = generator("That sounds great! How can I help you today?", max_length=50)["generated_text"]
+else:
+  response = generator("I'm sorry to hear that. Is there anything I can do to help?", max_length=50)["generated_text"]
+
+print("AI Response:", response)
+
